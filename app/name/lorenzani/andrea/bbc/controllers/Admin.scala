@@ -35,7 +35,6 @@ class Admin @Inject()(adminDB: AdminDB) extends Controller {
 
   def addEvent: Action[AnyContent] = Action.async { request =>
     Future {
-      request.body.asText.foreach(Logger.info(_))
       request.body.asJson.map { json =>
         json.validate[(Event, List[Votes])].map {
           case (event, votes) =>

@@ -24,15 +24,15 @@ object JsonReads {
       (JsPath \ "nvotes").read[Long]
     )(Votes.apply _)
 
+  implicit val adminCandRead: Reads[(String, Int)] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "initialVotes").read[Int]
+    ).tupled
+  
   implicit val adminFormRead: Reads[(Event, List[Votes])] = (
     (JsPath \ "eventname").read[String] and
     (JsPath \ "description").read[String] and
     (JsPath \ "candidates").read[List[(String, Int)]]
   ){ (evname, desc, cand) => (Event(-1, evname, desc, List()), cand.map(x=>Votes(x._1, x._2))) }
-
-  implicit val adminCandRead: Reads[(String, Int)] = (
-    (JsPath \ "name").read[String] and
-      (JsPath \ "initialVotes").read[Int]
-    ).tupled
 
 }
