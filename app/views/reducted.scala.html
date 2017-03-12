@@ -1,0 +1,36 @@
+@(title: String)(nav: Html)(content: Html)
+
+@main(title) {
+
+<div class="site-wrapper">
+
+    <div class="site-wrapper-inner">
+
+        <div class="cover-container">
+
+            <div class="masthead clearfix">
+                <div class="inner">
+                    <h3 class="masthead-brand">@title</h3>
+                    <nav>
+                        @nav
+                    </nav>
+                </div>
+            </div>
+
+            <div class="inner cover">
+                @content
+            </div>
+
+            <div class="mastfoot">
+                <div class="inner">
+                    <p>Cover template for <a href="http://getbootstrap.com">Bootstrap</a>, by <a href="https://twitter.com/mdo">mdo</a>.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+}

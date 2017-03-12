@@ -1,0 +1,111 @@
+@(title: String)
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@title</title>
+
+    <!-- My functions -->
+    <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
+
+    <!-- dependencies (jquery, handlebars and bootstrap) -->
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <link type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
+    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+    <!-- alpaca -->
+    <link type="text/css" href="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.css" rel="stylesheet"/>
+    <script type="text/javascript" src="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.js"></script>
+
+</head>
+<body>
+<div id="form1" class="alpacaform"></div>
+<script type="text/javascript">
+$("#form1").alpaca({
+    "schema": {
+        "title": "Create new event",
+        "type": "object",
+        "properties": {
+            "eventname": {
+                "type": "string",
+                "required": true,
+                "title": "Name of the event"
+            },
+            "description": {
+                "type": "string",
+                "required": true,
+                "title": "Description of the event"
+            },
+            "candidates": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                    "type": "table",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "required": true,
+                            "title": "Name of the candidate"
+                        },
+                        "initialVotes": {
+                            "type": "number",
+                            "default": 0,
+                            "title": "Initial Votes for the candidate"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "options": {
+        "form": {
+            "attributes":{
+                "action": "/admin/addevent",
+                "method": "post"
+            },
+            "buttons": {
+                "submit": {
+                    "click": function() {
+                        var value = this.getValue();
+                        var data = JSON.stringify(value, null, "  ");
+                        sendData("/admin/addevent", data, function(msg){
+                            alert('Event created!');
+                        });
+                        //this.ajaxSubmit().done(function(){
+                        //    alert('Event created!');
+                        //}).fail(function(){
+                        //    alert('Failed to create event!');
+                        //    console.error('Failed to save');
+                        //});
+                    }
+                }
+            }
+        },
+        "fields":{
+            "eventname":{
+                "placeholder": "(Required) Enter a valid name for this event"
+            },
+            "description":{
+                "placeholder": "(Required) Enter a description of this event"
+            },
+            "candidates":{
+                "type":"table"
+            }
+        },
+        "actionbar": {
+            "actions": [{
+                "action": "add",
+                "enabled": false
+            }]
+        }
+    }
+});
+</script>
+
+</body>
+</html>
