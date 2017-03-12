@@ -14,9 +14,12 @@ class AdminDbAccessSpec  extends PlaySpecification with BeforeAll with AfterAll 
 
   def verifyIsTheCurrentEvent(name: String): Boolean = {
     db.get.withConnection(autocommit = true){ conn =>
-      val rs = conn.createStatement().executeQuery("SELECT NAME FROM EVENTS WHERE CURRENT = TRUE;")
+      val stm = conn.prepareStatement("SELECT NAME FROM EVENTS WHERE CURRENT = ?;")
+      stm.setBoolean(1, true)
+      val rs = stm.executeQuery()
       rs.next()
-      if(rs.getString("NAME") != name || rs.next()) {
+      val curr = rs.getString("NAME")
+      if(curr != name || rs.next()) {
         false
       }
       else {

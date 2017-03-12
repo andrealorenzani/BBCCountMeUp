@@ -23,7 +23,7 @@ class PresenterDbAccessSpec  extends PlaySpecification with BeforeAll with After
       val presenterDb = new PresenterDB(db.get)
       val res = presenterDb.getVoteResult()
       res.map(x => x.name) must containTheSameElementsAs(List("Candidate", "OtherCandidate"))
-      res.map(x => x.nvotes) must containTheSameElementsAs(List(10, 10))
+      res.map(x => x.nvotes) must containTheSameElementsAs(List(10, 20))
     }
   }
 

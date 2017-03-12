@@ -6,6 +6,8 @@ import play.api.db.evolutions.Evolutions
 import play.api.db.{Database, Databases}
 import play.api.test.PlaySpecification
 
+import scala.util.Try
+
 @RunWith(classOf[JUnitRunner])
 class VoterDbAccessSpec  extends PlaySpecification with BeforeAll with AfterAll {
 
@@ -25,11 +27,17 @@ class VoterDbAccessSpec  extends PlaySpecification with BeforeAll with AfterAll 
       val event = adminDb.getCurrentEvent
       val voterDb = new VoterDB(db.get)
       // we test also that the voter cannot put 4 votes
-      (1 to 4).foreach( x => event.candidates.foreach(c => voterDb.insertVote(s"me$x", c.id)))
+      event.candidates.foreach{ case c =>
+        (1 to 4).foreach { x =>
+          val insert = Try{voterDb.insertVote(s"${c.name}_supporter", c.id)}
+          if(x < 4) insert must beASuccessfulTry
+          else insert must beAFailedTry
+        }
+      }
       val presenterDb = new PresenterDB(db.get)
       val res = presenterDb.getVoteResult()
       res.map(x => x.name) must containTheSameElementsAs(List("Candidate", "OtherCandidate", "OtherOtherCandidate", "UselessCandidate"))
-      res.map(x => x.nvotes) must containTheSameElementsAs(List(3, 3, 3, 0))
+      res.map(x => x.nvotes) must containTheSameElementsAs(List(3, 3, 3, 3))
     }
   }
 
