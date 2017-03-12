@@ -67,6 +67,8 @@ trait DbAccess {
     db.withConnection(autocommit = true) { conn =>
       // I don't like JOIN statements for high performance query, they are time consuming
       // I prefer not normalized databases
+      // NB: I didn't create and Index on EVENTID cause it is a foreign key - PLEASE see the query
+      // EXPLAIN SELECT CANDIDATENAME AS CANDIDATE, COUNT(*) AS VOTES FROM VOTES WHERE EVENTID=1 GROUP BY CANDIDATEID;
       val votesStm = conn.prepareStatement("SELECT CANDIDATENAME AS CANDIDATE, COUNT(*) AS VOTES FROM VOTES WHERE EVENTID=? GROUP BY CANDIDATEID;")
       val candStm = conn.prepareStatement("SELECT NAME FROM CANDIDATES WHERE EVENTID=?;")
       // It is perfectly normal to raise an exception if no event is currently open
@@ -91,12 +93,9 @@ trait DbAccess {
     // This create an event for a vote - Should be in an Admin console
     db.withConnection(autocommit = true) { conn =>
       val insertStm = conn.prepareStatement("INSERT INTO EVENTS(NAME, DESCRIPTION, CURRENT) VALUES(?, ?, ?);")
-      val updateStm = conn.prepareStatement("DELETE EVENTS WHERE CURRENT = ?;")
+      val updateStm = conn.prepareStatement("UPDATE EVENTS SET CURRENT = FALSE WHERE CURRENT = TRUE;")
       if(current) {
-        updateStm.setBoolean(1, true)
-        //updateStm.setBoolean(2, true)
-        val updated = updateStm.executeUpdate()
-        print(updated)
+        updateStm.executeUpdate()
       }
       insertStm.clearParameters()
       insertStm.setString(1, name)
