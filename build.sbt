@@ -1,15 +1,20 @@
-name := "play-scala"
+import play.sbt.PlayImport.specs2
 
-version := "1.0-SNAPSHOT"
+name := """play-scala"""
+
+version := "1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.8"
+
+//PlayKeys.devSettings := Seq("play.server.http.port" -> "9001")
 
 libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
+  evolutions,
   specs2 % Test
 )
 
