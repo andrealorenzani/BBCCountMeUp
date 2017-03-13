@@ -1,4 +1,104 @@
-This is your new Play application
+Basic usage
 =================================
 
-This file will be packaged with your application, when using `activator dist`.
+This is a SBT project based on Play Framework - as usual you have to run
+    > sbt run
+
+to start the application in Dev mode. This is mandatory to run evolutions. So run it and open the browser and apply the
+script. It is fine to run the application in DEV mode, so no need to use the command to start prod mode.
+To test it, as usual, please run
+    > sbt test
+
+
+=================================
+High level overview
+=================================
+
+The web application is based on the Play Framework. That was one of the first times I used it, so I lost lot of time in
+configuration and related problem. Especially for setting up the database.
+
+The application is very easy: the controllers receive the request, they perform a (group of) query and they give back a
+reply. There are basically three USERS for the application
+
+  -- Admin:
+    he/she creates the event (http://localhost:9000/admin). He/she has to provide a name for the event, a description
+    and at least two candidates. An initial number of votes can be supplied (for cheating or as a second round)
+
+  -- Presenter:
+    he/she can see the result of the vote (http://localhost:9000/). I didn't consider too much the load of the server when he reload the page,
+    because the data extraction is really easy and also under heavy load it should not affect the presenter
+
+  -- Voter:
+    the single voter (I have had no time to write the frontend). Most of the computation is made during the add of a
+    single vote. In that moment we check if the voter has already put more than 3 votes. For that reason we store all votes.
+    I didn't spend time in this, of course it would be much less time consuming to keep a record for the user, with the
+    number of votes he put. Putting all the votes one per record was really space consuming, but in a real world
+    scenario can be useful for any kind of statistic or for debugging. At the end the user/voter is the most dangerous
+    user of the application
+
+=================================
+Architecture
+=================================
+
+As I said I used Play Framework as basic framework for the application. I tried to use Akka Actor system to encapsulate
+the concurrency for the database, but I was a bit lost on the dependency injection, and I decided that, as the
+documentation of Play says explicitely, it was not worth to add Actors just for limiting the access to the connection.
+My first idea was indeed to have a number of actors "similar" to the number of connections pool for the database.
+
+Anyway using the execution context of play, they assure the user that the system should be well balanced with a
+fork-join thread pool. The problem of the system is the voters: they could easily use all the resources. But the query
+related the result of the vote has a delay of less than 200 ms so even under heavy loads it should react promptly.
+
+The db is divided into 4 tables:
+  -- Event:
+    it describe an event for which we vote. Please note that opening a new event doesn't remove the data of the previous
+    one, even if I didn't have time to create everything needed to retrieve the past informations
+
+  -- Candidates:
+    it contains the candidates for the events. It has a foreign key on the event
+
+  -- Votes:
+    all the votes that the users have sent. It has a foreign key on event and candidate. It is not normalized because
+    as first solution I was relaying only on this table, and I didn't want to join with candidates only to retrieve the
+    name. It was a performance optimization
+
+  -- Cache:
+    it keep the image of the situation in this moment. It has a foreign key on event and candidate. Again, it is not
+    normalized even if it doesn't need to make hard computations
+
+The structure of classes is easy to understand. The only thing to add is that for coding faster I put all the queries in
+the class DbAccess, with all methods protected, and then I limited the three Daos by exposing the query related to the
+different users. Of course I used as much as possible the IoC, even if in this case it didn't help too much in testing.
+
+=================================
+What went bad
+=================================
+
+As I said my first idea was to use the Actor system. I didn't work too much with Akka and Play, so I had some problems in
+configuring the DI for the database. I had some problems in configuration in general.
+Moreover I spent 3 hours with a problem related to random tests failure, for then discovering that it was a problem only
+related to Intellij environment.
+
+Unfortunately I didn't complete the frontend - the page for the user to vote is not available.
+
+=================================
+What is OK (and you can test it)
+=================================
+
+The first step is to create an event. Go to
+    http://localhost:9000/admin
+
+Name, description (not used) and at least 2 candidates should be provided. Unfortunately I didn't write the REST service
+for adding votes, but there are tests to verify that a user cannot add more than 3 votes. So please use the admin page
+to add the initial number of votes.
+
+At the page
+    http://localhost:9000/
+
+you can see a graph of the votes and the summary table with percentages.
+I had a TDD approach to the DB/DAO development: I wrote the tests with a stub of the methods/query I wanted to write.
+They passed also when I introduced the cache.
+
+
+Thank you.
+-- Andrea
