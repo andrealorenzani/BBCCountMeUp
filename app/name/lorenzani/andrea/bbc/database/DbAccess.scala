@@ -7,9 +7,13 @@ import play.api.db.Database
 import scala.util.{Failure, Success, Try}
 
 object DbAccess {
+
   case class Votes(name: String, nvotes: Long)
+
   case class Candidate(id: Int, name: String)
+
   case class Event(id: Int, name: String, desc: String, candidates: List[Candidate])
+
 }
 
 // For simplicity I define here all the queries I need. This is a trait, I think I will need
@@ -17,6 +21,7 @@ object DbAccess {
 // the admin part and one for the voter part.
 // Ref for db in Play: https://www.playframework.com/documentation/2.5.x/ScalaDatabase
 trait DbAccess {
+
   import DbAccess._
 
   val db: Database
@@ -24,7 +29,7 @@ trait DbAccess {
   protected def currEventId(openconn: Connection): Try[Int] = {
     val selectEvent = "SELECT ID FROM EVENTS WHERE CURRENT = TRUE;"
     val rs = openconn.createStatement().executeQuery(selectEvent)
-    if(rs.next()) {
+    if (rs.next()) {
       Success(rs.getInt("ID"))
     }
     else Failure(new NoSuchElementException("No event open yet"))
@@ -32,10 +37,11 @@ trait DbAccess {
 
   protected def insertVote(voter: String, candidate: Int): Unit = {
     // For simplicity I will avoid registering voters, so the voter is a String but it should be his/her id (Int)
-    db.withConnection(autocommit = true) { conn =>
+    db.withConnection(autocommit = false) { conn =>
       val votesStm = conn.prepareStatement("SELECT COUNT(*) AS VOTES FROM VOTES WHERE VOTER = ? AND EVENTID = ?;")
       val candidateStm = conn.prepareStatement("SELECT NAME FROM CANDIDATES WHERE ID = ?;")
       val insertStm = conn.prepareStatement("INSERT INTO VOTES(VOTER, EVENTID, CANDIDATEID, CANDIDATENAME) VALUES(?, ?, ?, ?);")
+      val updateStm = conn.prepareStatement("UPDATE CACHE SET VOTES=VOTES+1 WHERE EVENTID=? AND CANDIDATEID=?;")
 
       val eventId = currEventId(conn).get
       // It is much easier to make the voter wait a bit more by checking if its vote
@@ -44,10 +50,10 @@ trait DbAccess {
       votesStm.setString(1, voter)
       votesStm.setInt(2, eventId)
       val votesRS = votesStm.executeQuery()
-      if(!votesRS.next() || votesRS.getInt("VOTES") < 3) {
+      if (!votesRS.next() || votesRS.getInt("VOTES") < 3) {
         candidateStm.setInt(1, candidate)
         val candidRS = candidateStm.executeQuery()
-        if(candidRS.next()) {
+        if (candidRS.next()) {
           val candName = candidRS.getString("NAME")
           insertStm.setString(1, voter)
           // It is perfectly fine to raise an error if no event is open
@@ -56,6 +62,10 @@ trait DbAccess {
           insertStm.setInt(3, candidate)
           insertStm.setString(4, candName)
           insertStm.executeUpdate()
+          updateStm.setInt(1, eventId)
+          updateStm.setInt(2, candidate)
+          updateStm.executeUpdate()
+          conn.commit()
         }
         else throw new NoSuchElementException("Candidate does not exist")
       }
@@ -65,27 +75,17 @@ trait DbAccess {
 
   protected def getVoteResult(eventId: Option[Int] = None): List[Votes] = {
     db.withConnection(autocommit = true) { conn =>
-      // I don't like JOIN statements for high performance query, they are time consuming
-      // I prefer not normalized databases
-      // NB: I didn't create and Index on EVENTID cause it is a foreign key - PLEASE see the query
-      // EXPLAIN SELECT CANDIDATENAME AS CANDIDATE, COUNT(*) AS VOTES FROM VOTES WHERE EVENTID=1 GROUP BY CANDIDATEID;
-      val votesStm = conn.prepareStatement("SELECT CANDIDATENAME AS CANDIDATE, COUNT(*) AS VOTES FROM VOTES WHERE EVENTID=? GROUP BY CANDIDATEID;")
-      val candStm = conn.prepareStatement("SELECT NAME FROM CANDIDATES WHERE EVENTID=?;")
+      // I did a last minute optimization here, so I could have normalized the database
+      // Before it was a long lasting query and not joining improved the performance
+      val votesStm = conn.prepareStatement("SELECT CANDIDATENAME AS CANDIDATE, VOTES FROM CACHE WHERE EVENTID=?;")
       // It is perfectly normal to raise an exception if no event is currently open
       votesStm.setInt(1, eventId.getOrElse(currEventId(conn).get))
       val voteRS = votesStm.executeQuery()
-      val votes = new Iterator[(String, Long)] {
+      new Iterator[Votes] {
         def hasNext = voteRS.next()
-        def next() = (voteRS.getString("CANDIDATE"), voteRS.getLong("VOTES"))
-      }.toMap
-      candStm.setInt(1, eventId.getOrElse(currEventId(conn).get))
-      val candRs = candStm.executeQuery()
-      new Iterator[String] {
-        def hasNext = candRs.next()
-        def next() = candRs.getString("NAME")
-      }.toList.map { cand =>
-        Votes(cand, votes.getOrElse(cand, 0l))
-      }
+
+        def next() = Votes(voteRS.getString("CANDIDATE"), voteRS.getLong("VOTES"))
+      }.toList
     }
   }
 
@@ -94,7 +94,7 @@ trait DbAccess {
     db.withConnection(autocommit = true) { conn =>
       val insertStm = conn.prepareStatement("INSERT INTO EVENTS(NAME, DESCRIPTION, CURRENT) VALUES(?, ?, ?);")
       val updateStm = conn.prepareStatement("UPDATE EVENTS SET CURRENT = FALSE WHERE CURRENT = TRUE;")
-      if(current) {
+      if (current) {
         updateStm.executeUpdate()
       }
       insertStm.clearParameters()
@@ -112,11 +112,12 @@ trait DbAccess {
       val rs = conn.createStatement().executeQuery(oldStm)
       val evinfo = new Iterator[(Int, String, String, Candidate)] {
         def hasNext = rs.next()
+
         def next() = (rs.getInt("ID"), rs.getString("NAME"), rs.getString("DESCRIPTION"), Candidate(rs.getInt("CANDID"), rs.getString("CANDIDATE")))
       }.toStream
-      if(evinfo.isEmpty) throw new NoSuchElementException("No event open yet")
+      if (evinfo.isEmpty) throw new NoSuchElementException("No event open yet")
       evinfo.foldLeft(Event(-1, "", "", List())) { case (ev, (evid, evname, evdesc, cand)) =>
-        if(cand.name == null && cand.id == 0) {
+        if (cand.name == null && cand.id == 0) {
           // It is the DB way to do the left join
           Event(evid, evname, evdesc, ev.candidates)
         }
@@ -135,25 +136,20 @@ trait DbAccess {
       insertStm.setInt(1, event)
       insertStm.setString(2, name)
       insertStm.executeUpdate()
-      if(initialVotes>0) {
-        // This can have problems with duplicate names - I hope admins won't put twice the exact same name
-        val candidateStm = conn.prepareStatement("SELECT ID, NAME FROM CANDIDATES WHERE NAME = ? AND EVENTID = ?;")
-        candidateStm.setString(1, name)
-        candidateStm.setInt(2, event)
-        val rs = candidateStm.executeQuery()
-        if(rs.next()) {
-          val candId = rs.getInt("ID")
-          val voteStm = conn.prepareStatement("INSERT INTO VOTES(VOTER, EVENTID, CANDIDATEID, CANDIDATENAME) VALUES(?, ?, ?, ?);")
-          (1 to initialVotes).map { voteNum =>
-            val voter = s"automatic_voter_${voteNum/3}"
-            voteStm.clearParameters()
-            voteStm.setString(1, voter)
-            voteStm.setInt(2, event)
-            voteStm.setInt(3, candId)
-            voteStm.setString(4, name)
-            voteStm.executeUpdate()
-          }
-        }
+
+      val candidateStm = conn.prepareStatement("SELECT ID, NAME FROM CANDIDATES WHERE NAME = ? AND EVENTID = ?;")
+      candidateStm.setString(1, name)
+      candidateStm.setInt(2, event)
+      val rs = candidateStm.executeQuery()
+      while (rs.next()) {
+        val candId = rs.getInt("ID")
+        val voteStm = conn.prepareStatement("INSERT INTO CACHE(EVENTID, CANDIDATEID, CANDIDATENAME, VOTES) VALUES(?, ?, ?, ?);")
+        voteStm.clearParameters()
+        voteStm.setInt(1, event)
+        voteStm.setInt(2, candId)
+        voteStm.setString(3, name)
+        voteStm.setInt(4, initialVotes)
+        voteStm.executeUpdate()
       }
       conn.commit()
     }
