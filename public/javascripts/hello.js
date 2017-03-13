@@ -13,11 +13,10 @@ function invokeAjax(url, func) {
                  if(func !== undefined) { func (msg) }
              }
     });
-}
+};
 
 function sendData(url, data, func) {
-    var res;
-    $.ajax({
+    return $.ajax({
             type: "POST", //rest Type
             dataType: 'json',
             data: data,
@@ -28,8 +27,7 @@ function sendData(url, data, func) {
                 if(func !== undefined) { func (msg) }
             }
     });
-    return res;
-}
+};
 
 function generateChart(container, type, event, votes) {
     var chart = new CanvasJS.Chart(container, {
@@ -45,7 +43,34 @@ function generateChart(container, type, event, votes) {
         ]
     });
     chart.render();
-}
+};
+
+
+    function createTable(id, data) {
+        $(id).alpaca({
+        "data": data,
+        "schema": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "title": "Candidate"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Votes"
+                    }
+                }
+            }
+        },
+        "options": {
+            "type": "table"
+        },
+        "view": "bootstrap-display"
+    });
+    }
 
 window.onload = function() {
     if(this.pageFunction!==undefined){

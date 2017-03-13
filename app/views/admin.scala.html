@@ -73,15 +73,9 @@ $("#form1").alpaca({
                     "click": function() {
                         var value = this.getValue();
                         var data = JSON.stringify(value, null, "  ");
-                        sendData("/admin/addevent", data, function(msg){
+                        return sendData("/admin/addevent", data, function(msg){
                             alert('Event created!');
                         });
-                        //this.ajaxSubmit().done(function(){
-                        //    alert('Event created!');
-                        //}).fail(function(){
-                        //    alert('Failed to create event!');
-                        //    console.error('Failed to save');
-                        //});
                     }
                 }
             }

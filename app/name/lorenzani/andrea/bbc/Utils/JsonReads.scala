@@ -28,7 +28,7 @@ object JsonReads {
     (JsPath \ "name").read[String] and
       (JsPath \ "initialVotes").read[Int]
     ).tupled
-  
+
   implicit val adminFormRead: Reads[(Event, List[Votes])] = (
     (JsPath \ "eventname").read[String] and
     (JsPath \ "description").read[String] and

@@ -41,6 +41,12 @@ class Admin @Inject()(adminDB: AdminDB) extends Controller {
             // not in parallel, we want to be sure it is created before adding candidates
             adminDB.openEvent(event.name, event.desc, true)
             Logger.info(s"Opened new event ${event.name}: '${event.desc}'")
+            // Now that we have the event open we can do a parallel insert of any candidate
+            // Please note - For simplicity I put in parallel at this level, I could have put in parallel a
+            // group of votes, but I should have complicated the insertCandidate method in order to not share
+            // the same connection to the db with multiple threads OR I should have paid much more attention
+            // at the execution of statements. REF: http://docs.oracle.com/javadb/10.8.3.0/devguide/cdevconcepts89498.html
+            // Please note: val cores: Int = Runtime.getRuntime.availableProcessors()
             val parallelAdd = votes.map { cand => Future{ adminDB.insertCandidate(cand.name, cand.nvotes.toInt) } }
             // We don't really care about the result, this is a massive add done at event creation time, and
             // admin has no need to wait for the result, as long as the data is inserted, at one point

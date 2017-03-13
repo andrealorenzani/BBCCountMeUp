@@ -7,7 +7,25 @@
     <li><a href="#">Contact</a></li>
 </ul>
 }{
+<div class="cover_graph" id="c_graph">@message</div>
+<div class="cover_table" id="c_table">@message</div>
 
-@message
+<script type="text/javascript">
+    function pageFunction() {
+        invokeAjax("/presenter/event").then(function(eventret) {
+          var event = eventret;
+          invokeAjax("/presenter/result").then(function(result) {
+            var votes = result;
+            generateChart("c_graph", "doughnut", event, votes);
+            createTable("#c_table", votes);
+          }, function(err) {
+            console.log(err); // Error: "It broke"
+          });
+        }, function(err) {
+          console.log(err); // Error: "It broke"
+        });
+    }
+
+</script>
 
 }
