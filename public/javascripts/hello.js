@@ -47,6 +47,14 @@ function generateChart(container, type, event, votes) {
 
 
     function createTable(id, data) {
+        var tot = 0;
+        for( var i = 0; i < data.length; i++ ) {
+            tot = tot + data[i].y;
+        }
+        for( var i = 0; i < data.length; i++ ) {
+            data[i].perc = (Math.floor((data[i].y*100)/tot))+"%";
+        }
+
         $(id).alpaca({
         "data": data,
         "schema": {
@@ -61,6 +69,10 @@ function generateChart(container, type, event, votes) {
                     "y": {
                         "type": "number",
                         "title": "Votes"
+                    },
+                    "perc": {
+                        "type": "number",
+                        "title": "Votes (percentage)"
                     }
                 }
             }
