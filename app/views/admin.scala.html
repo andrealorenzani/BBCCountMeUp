@@ -9,9 +9,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@title</title>
 
-    <!-- My functions -->
-    <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
-
     <!-- dependencies (jquery, handlebars and bootstrap) -->
     <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
@@ -22,83 +19,15 @@
     <link type="text/css" href="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.css" rel="stylesheet"/>
     <script type="text/javascript" src="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.js"></script>
 
+    <!-- My functions -->
+    <script src="@routes.Assets.versioned("javascripts/invoke-ajax.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.versioned("javascripts/alpaca-utils.js")" type="text/javascript"></script>
+
 </head>
 <body>
-<div id="form1" class="alpacaform"></div>
+<div id="admin-form" class="alpacaform"></div>
 <script type="text/javascript">
-$("#form1").alpaca({
-    "schema": {
-        "title": "Create new event",
-        "type": "object",
-        "properties": {
-            "eventname": {
-                "type": "string",
-                "required": true,
-                "title": "Name of the event"
-            },
-            "description": {
-                "type": "string",
-                "required": true,
-                "title": "Description of the event"
-            },
-            "candidates": {
-                "type": "array",
-                "minItems": 2,
-                "items": {
-                    "type": "table",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "required": true,
-                            "title": "Name of the candidate"
-                        },
-                        "initialVotes": {
-                            "type": "number",
-                            "default": 0,
-                            "title": "Initial Votes for the candidate"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "options": {
-        "form": {
-            "attributes":{
-                "action": "/admin/addevent",
-                "method": "post"
-            },
-            "buttons": {
-                "submit": {
-                    "click": function() {
-                        var value = this.getValue();
-                        var data = JSON.stringify(value, null, "  ");
-                        return sendData("/admin/addevent", data, function(msg){
-                            alert('Event created!');
-                        });
-                    }
-                }
-            }
-        },
-        "fields":{
-            "eventname":{
-                "placeholder": "(Required) Enter a valid name for this event"
-            },
-            "description":{
-                "placeholder": "(Required) Enter a description of this event"
-            },
-            "candidates":{
-                "type":"table"
-            }
-        },
-        "actionbar": {
-            "actions": [{
-                "action": "add",
-                "enabled": false
-            }]
-        }
-    }
-});
+    generateAdminForm("#admin-form");
 </script>
 
 </body>
