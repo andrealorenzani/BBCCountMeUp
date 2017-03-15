@@ -33,6 +33,19 @@
 <body>
 
     <div class="container">
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="#" id="donough">Donough</a></li>
+            <li role="presentation"><a href="#" id="column">Column</a></li>
+            <li role="presentation"><a href="#" id="pie">Pie</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">CountMeUp</h3>
+      </div>
+    </div>
+
+    <div class="container">
       <div class="row marketing">
         <div class="col-lg-6">
             <div class="cover_graph" id="c_graph"></div>
@@ -50,6 +63,10 @@
 
 <script type="text/javascript">
     function pageFunction() {
+        $('#column').click(function(){ generateChart("c_graph", "column"); return false; });
+        $('#doughnut').click(function(){ generateChart("c_graph", "doughnut"); return false; });
+        $('#pie').click(function(){ generateChart("c_graph", "pie"); return false; });
+
         invokeAjax("/presenter/event").then(function(eventret) {
           var event = eventret;
           invokeAjax("/presenter/result").then(function(result) {
