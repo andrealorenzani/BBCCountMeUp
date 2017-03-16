@@ -36,9 +36,9 @@
       <div class="header clearfix">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active"><a href="#" id="donough">Donough</a></li>
-            <li role="presentation"><a href="#" id="column">Column</a></li>
-            <li role="presentation"><a href="#" id="pie">Pie</a></li>
+            <li role="presentation" class="active" id="pr_dough"><a href="#" id="doughnut">Doughnut</a></li>
+            <li role="presentation" id="pr_column"><a href="#" id="column">Column</a></li>
+            <li role="presentation" id="pr_pie"><a href="#" id="pie">Pie</a></li>
           </ul>
         </nav>
         <h3 class="text-muted">CountMeUp</h3>
@@ -63,9 +63,27 @@
 
 <script type="text/javascript">
     function pageFunction() {
-        $('#column').click(function(){ generateChart("c_graph", "column"); return false; });
-        $('#doughnut').click(function(){ generateChart("c_graph", "doughnut"); return false; });
-        $('#pie').click(function(){ generateChart("c_graph", "pie"); return false; });
+        $('#column').click(function(){
+            generateChart("c_graph", "column");
+            $("#pr_column").addClass("active");
+            $("#pr_dough").removeClass("active");
+            $("#pr_pie").removeClass("active");
+            return false;
+         });
+        $('#doughnut').click(function(){
+            generateChart("c_graph", "doughnut");
+            $("#pr_column").removeClass("active");
+            $("#pr_dough").addClass("active");
+            $("#pr_pie").removeClass("active");
+            return false;
+         });
+        $('#pie').click(function(){
+            generateChart("c_graph", "pie");
+            $("#pr_column").removeClass("active");
+            $("#pr_dough").removeClass("active");
+            $("#pr_pie").addClass("active");
+            return false;
+         });
 
         invokeAjax("/presenter/event").then(function(eventret) {
           var event = eventret;
