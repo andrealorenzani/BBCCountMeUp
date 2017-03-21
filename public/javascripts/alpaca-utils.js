@@ -110,4 +110,73 @@ function generateAdminForm(where) {
             }
         }
     });
-}
+};
+
+function generateVoterForm(where) {
+    invokeAjax("/voter/event").then(function(eventret){
+        var options = {};
+        var names = [];
+        for( var i = 0; i < eventret.candidates.length; i++ ) {
+            options[eventret.candidates[i].name]= eventret.candidates[i].id;
+            names[i] = eventret.candidates[i].name;
+        }
+
+        $(where).alpaca({
+            "data": {
+                "voter": "",
+                "candidate": eventret.candidates[0].id,
+                "eventid": eventret.id
+            },
+            "options": {
+
+                "form": {
+                    "attributes":{
+                        "action": "/voter/addvote",
+                        "method": "post"
+                    },
+                    "buttons": {
+                        "submit": {
+                            "click": function() {
+                                var value = this.getValue();
+                                value.candidate = options[value.candidate];
+                                var data = JSON.stringify(value, null, "  ");
+                                return sendData("/voter/addvote", data, function(msg){
+                                    alert(msg.msg);
+                                });
+                            }
+                        }
+                    }
+                },
+
+                "fields":{
+                    "voter":{
+                        "placeholder": "Enter your voter id"
+                    },
+                    "candidate":{
+                        "label": "Candidates",
+                        "removeDefaultNone": true
+                    },
+                    "eventid": { "type": "hidden" }
+                }
+            },
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "voter": {
+                        "type": "string",
+                        "title": "Voter"
+                    },
+                    "candidate": {
+                        "type": "radio",
+                        "title": "Select a candidate",
+                        "required": true,
+                        "enum": names
+                    },
+                    "eventid": {
+                        "type": "number"
+                    }
+                }
+            }
+        });
+    });
+};

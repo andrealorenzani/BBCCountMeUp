@@ -12,6 +12,7 @@ POST    /admin/event                name.lorenzani.andrea.bbc.controllers.Admin.
 POST    /admin/addevent             name.lorenzani.andrea.bbc.controllers.Admin.addEvent
 GET     /voter                      name.lorenzani.andrea.bbc.controllers.Voter.index
 POST    /voter/event                name.lorenzani.andrea.bbc.controllers.Voter.event
+POST    /voter/addvote              name.lorenzani.andrea.bbc.controllers.Voter.addVote
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

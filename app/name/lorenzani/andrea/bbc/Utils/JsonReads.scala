@@ -35,4 +35,10 @@ object JsonReads {
     (JsPath \ "candidates").read[List[(String, Int)]]
   ){ (evname, desc, cand) => (Event(-1, evname, desc, List()), cand.map(x=>Votes(x._1, x._2))) }
 
+  implicit val voteFromVoter: Reads[(String, Int, Int)] = (
+    (JsPath \ "voter").read[String] and
+      (JsPath \ "candidate").read[Int] and
+      (JsPath \ "eventid").read[Int]
+    ).tupled
+
 }
