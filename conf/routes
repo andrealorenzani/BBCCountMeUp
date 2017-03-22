@@ -7,6 +7,7 @@ GET     /                           controllers.Default.redirect(to="/presenter"
 GET     /presenter                  name.lorenzani.andrea.bbc.controllers.Presenter.index
 POST    /presenter/result           name.lorenzani.andrea.bbc.controllers.Presenter.result
 POST    /presenter/event            name.lorenzani.andrea.bbc.controllers.Presenter.event
+GET     /presenter/websocket        name.lorenzani.andrea.bbc.controllers.Presenter.websocket
 GET     /admin                      name.lorenzani.andrea.bbc.controllers.Admin.index
 POST    /admin/event                name.lorenzani.andrea.bbc.controllers.Admin.event
 POST    /admin/addevent             name.lorenzani.andrea.bbc.controllers.Admin.addEvent

@@ -28,6 +28,7 @@
     <script src="@routes.Assets.versioned("javascripts/invoke-ajax.js")" type="text/javascript"></script>
     <script src="@routes.Assets.versioned("javascripts/generate-chart.js")" type="text/javascript"></script>
     <script src="@routes.Assets.versioned("javascripts/alpaca-utils.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.versioned("javascripts/websocket.js")" type="text/javascript"></script>
 
 </head>
 <body>
@@ -51,7 +52,8 @@
             <div class="cover_graph" id="c_graph"></div>
         </div>
 
-        <div class="col-lg-6" id="c_table">
+        <div class="col-lg-6">
+            <div class="cover_graph" id="c_table"></div>
         </div>
       </div>
 
@@ -91,6 +93,12 @@
             var votes = result;
             generateChart("c_graph", "doughnut", event, votes);
             createTable("#c_table", votes);
+            // After the first load we try to setup a websocket
+            openSocket("/presenter/websocket", function(result) {
+                var votes = JSON.parse(result.data);
+                generateChart("c_graph", window.storedtype, window.storedevent, votes);
+                createTable("#c_table", votes);
+              });
           }, function(err) {
             console.log(err); // Error: "It broke"
           });

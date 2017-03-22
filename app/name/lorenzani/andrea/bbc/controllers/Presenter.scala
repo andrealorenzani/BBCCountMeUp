@@ -3,18 +3,31 @@ package name.lorenzani.andrea.bbc.controllers
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Named}
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
+import akka.stream.Materializer
 import akka.util.Timeout
 import name.lorenzani.andrea.bbc.database.DbAccess.{Event, Votes}
 import name.lorenzani.andrea.bbc.Utils.JsonWrites._
+import name.lorenzani.andrea.bbc.actors.WebSocketActor
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, Controller}
+import play.api.libs.streams.ActorFlow
+import play.api.mvc.WebSocket.MessageFlowTransformer
+import play.api.mvc.{Action, AnyContent, Controller, WebSocket}
 
 import scala.concurrent.duration.FiniteDuration
 
-class Presenter @Inject()(@Named("presenter-actor") presenterActor: ActorRef) extends Controller {
+class Presenter @Inject()(implicit @Named("presenter-actor") presenterActor: ActorRef,
+                          system: ActorSystem,
+                          materializer: Materializer) extends Controller {
   import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+  def websocket = {
+    implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[String, JsValue]
+    WebSocket.accept[String, JsValue] { request =>
+      ActorFlow.actorRef(out => WebSocketActor.props(out, presenterActor))
+    }
+  }
 
   def result: Action[AnyContent] = Action.async {
     import name.lorenzani.andrea.bbc.actors.PresenterActor.VoteResult

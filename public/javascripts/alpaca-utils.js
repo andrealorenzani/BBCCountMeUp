@@ -7,33 +7,39 @@ function createTable(id, data) {
             data[i].perc = (Math.floor((data[i].y*100)/tot))+"%";
         }
 
-        $(id).alpaca({
-        "data": data,
-        "schema": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "label": {
-                        "type": "string",
-                        "title": "Candidate"
-                    },
-                    "y": {
-                        "type": "number",
-                        "title": "Votes"
-                    },
-                    "perc": {
-                        "type": "number",
-                        "title": "Votes (percentage)"
+        if($(id).alpaca("exists")){
+            $(id).alpaca("get").setValue(data);
+        }
+        else{
+
+            $(id).alpaca({
+                "data": data,
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {
+                                "type": "string",
+                                "title": "Candidate"
+                            },
+                            "y": {
+                                "type": "number",
+                                "title": "Votes"
+                            },
+                            "perc": {
+                                "type": "string",
+                                "title": "Votes (percentage)"
+                            }
+                        }
                     }
-                }
-            }
-        },
-        "options": {
-            "type": "table"
-        },
-        "view": "bootstrap-display"
-    });
+                },
+                "options": {
+                    "type": "table"
+                },
+                "view": "bootstrap-display"
+            });
+        }
 };
 
 function generateAdminForm(where) {

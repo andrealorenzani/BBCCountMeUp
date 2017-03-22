@@ -1,4 +1,11 @@
 function generateChart(container, type, event, votes) {
+    if(type!==undefined) {
+        window.storedtype=type;
+    }
+    else {
+        type = window.storedtype;
+    }
+
     if(event!==undefined) {
         window.storedevent=event;
     }
