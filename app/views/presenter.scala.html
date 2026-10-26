@@ -1,111 +1,25 @@
-@(message: String)
+@()
 
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title></title>
-
-    <!-- A nice lib for pies -->
-    <script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
-
-    <!-- Includes of the template -->
-    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
-    <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-
-    <!-- dependencies (jquery, handlebars and bootstrap) -->
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
-    <link type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
-    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-
-    <!-- alpaca -->
-    <link type="text/css" href="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.css" rel="stylesheet"/>
-    <script type="text/javascript" src="//code.cloudcms.com/alpaca/1.5.23/bootstrap/alpaca.min.js"></script>
-
-    <!-- My functions -->
-    <script src="@routes.Assets.versioned("javascripts/invoke-ajax.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.versioned("javascripts/generate-chart.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.versioned("javascripts/alpaca-utils.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.versioned("javascripts/websocket.js")" type="text/javascript"></script>
-
-</head>
-<body>
-
-    <div class="container">
-      <div class="header clearfix">
-        <nav>
-          <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active" id="pr_dough"><a href="#" id="doughnut">Doughnut</a></li>
-            <li role="presentation" id="pr_column"><a href="#" id="column">Column</a></li>
-            <li role="presentation" id="pr_pie"><a href="#" id="pie">Pie</a></li>
-          </ul>
-        </nav>
-        <h3 class="text-muted">CountMeUp</h3>
-      </div>
+@main("Results", "presenter", "javascripts/presenter.js") {
+    <div id="event-title" class="mb-3">
+        <h2 class="h4 mb-0">Loading&hellip;</h2>
+        <p class="text-body-secondary mb-0" id="event-description"></p>
     </div>
-
-    <div class="container">
-      <div class="row marketing">
+    <div class="row g-4">
         <div class="col-lg-6">
-            <div class="cover_graph" id="c_graph"></div>
+            <div class="btn-group mb-3" role="group" aria-label="Chart type" id="chart-types">
+                <button type="button" class="btn btn-outline-primary active" data-type="doughnut">Doughnut</button>
+                <button type="button" class="btn btn-outline-primary" data-type="bar">Column</button>
+                <button type="button" class="btn btn-outline-primary" data-type="pie">Pie</button>
+            </div>
+            <div class="chart-box"><canvas id="chart" aria-label="Votes per candidate" role="img"></canvas></div>
         </div>
-
         <div class="col-lg-6">
-            <div class="cover_graph" id="c_table"></div>
+            <table class="table align-middle" id="results-table">
+                <thead><tr><th>Candidate</th><th class="text-end">Votes</th><th class="text-end">Share</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <p class="text-body-secondary small" id="live-status"></p>
         </div>
-      </div>
-
-      <footer class="footer">
-        <p>&copy; Andrea Lorenzani, 2017</p>
-      </footer>
-
-    </div> <!-- /container -->
-
-<script type="text/javascript">
-    function pageFunction() {
-        $('#column').click(function(){
-            generateChart("c_graph", "column");
-            $("#pr_column").addClass("active");
-            $("#pr_dough").removeClass("active");
-            $("#pr_pie").removeClass("active");
-            return false;
-         });
-        $('#doughnut').click(function(){
-            generateChart("c_graph", "doughnut");
-            $("#pr_column").removeClass("active");
-            $("#pr_dough").addClass("active");
-            $("#pr_pie").removeClass("active");
-            return false;
-         });
-        $('#pie').click(function(){
-            generateChart("c_graph", "pie");
-            $("#pr_column").removeClass("active");
-            $("#pr_dough").removeClass("active");
-            $("#pr_pie").addClass("active");
-            return false;
-         });
-
-        invokeAjax("/presenter/event").then(function(eventret) {
-          var event = eventret;
-          invokeAjax("/presenter/result").then(function(result) {
-            var votes = result;
-            generateChart("c_graph", "doughnut", event, votes);
-            createTable("#c_table", votes);
-            // After the first load we try to setup a websocket
-            openSocket("/presenter/websocket", function(result) {
-                var votes = JSON.parse(result.data);
-                generateChart("c_graph", window.storedtype, window.storedevent, votes);
-                createTable("#c_table", votes);
-              });
-          }, function(err) {
-            console.log(err); // Error: "It broke"
-          });
-        }, function(err) {
-          console.log(err); // Error: "It broke"
-        });
-    }
-</script>
-</body>
-</html>
+    </div>
+}

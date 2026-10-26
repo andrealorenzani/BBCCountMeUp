@@ -1,9 +1,15 @@
 logs
 target
+project/target
+project/project
 *.iml
 /.idea
 /.idea_modules
 /.classpath
 /.project
 /.settings
+/.bsp
 /RUNNING_PID
+
+# H2 file database created at runtime
+/data

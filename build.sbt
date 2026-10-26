@@ -1,25 +1,24 @@
-import play.sbt.PlayImport.specs2
+name := "count-me-up"
+organization := "name.lorenzani.andrea"
+version := "2.0.0"
 
-name := """play-scala"""
-
-version := "1.0"
+scalaVersion := "3.3.9"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.8"
-
-//PlayKeys.devSettings := Seq("play.server.http.port" -> "9001")
-
 libraryDependencies ++= Seq(
+  guice,
   jdbc,
-  cache,
-  ws,
   evolutions,
-  specs2 % Test
+  "com.h2database"         % "h2"                 % "2.5.252",
+  "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test
 )
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+scalacOptions ++= Seq(
+  "-feature",
+  "-Wunused:imports",
+  // generated code (twirl templates and the router) is not ours to tidy
+  "-Wconf:src=.*(\\.html|/routes):s,src=.*/target/.*:s"
+)
 
-// Play provides two styles of routers, one expects its actions to be injected, the
-// other, legacy style, accesses its actions statically.
-routesGenerator := InjectedRoutesGenerator
+Test / fork := true
